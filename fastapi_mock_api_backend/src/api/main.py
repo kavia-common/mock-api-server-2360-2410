@@ -21,6 +21,9 @@ def _parse_cors_origins(raw: Optional[str]) -> List[str]:
 # Configure CORS:
 # - Default for local development (common dev ports).
 # - Can be overridden with CORS_ALLOW_ORIGINS env var (comma-separated).
+#
+# NOTE: If you need to allow a different origin in your environment, request setting:
+#   CORS_ALLOW_ORIGINS="http://localhost:XXXX,http://127.0.0.1:YYYY"
 _default_dev_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -85,16 +88,16 @@ def health() -> HealthResponse:
     return HealthResponse(status="ok")
 
 
-# The "provided JSON payload" is intended to be implemented as a fixed mock object.
-# TODO: Replace MOCK_PAYLOAD with the exact JSON from the user_input_ref attachment.
-# NOTE: In this execution environment, the referenced attachment path was not found, so the
-# exact payload could not be loaded automatically.
+# The sample JSON payload returned by GET /mock.
+# If you need a different payload, update MOCK_PAYLOAD below.
 MOCK_PAYLOAD: Dict[str, Any] = {
-    "error": "Attachment not available in runtime environment",
-    "detail": (
-        "The user-provided JSON payload must be pasted here verbatim (as a Python dict) "
-        "once the attachment is accessible."
-    ),
+    "message": "Hello from the mock API",
+    "items": [
+        {"id": 1, "name": "Alpha", "status": "active"},
+        {"id": 2, "name": "Beta", "status": "inactive"},
+        {"id": 3, "name": "Gamma", "status": "active"},
+    ],
+    "meta": {"source": "fastapi_mock_api_backend", "version": "1.0.0"},
 }
 
 
