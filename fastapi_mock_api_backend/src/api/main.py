@@ -85,16 +85,16 @@ def health() -> HealthResponse:
     return HealthResponse(status="ok")
 
 
-# The "provided JSON payload" (from the work item description) is implemented as a fixed mock object.
-# If you want to change it, edit MOCK_PAYLOAD below.
+# The "provided JSON payload" is intended to be implemented as a fixed mock object.
+# TODO: Replace MOCK_PAYLOAD with the exact JSON from the user_input_ref attachment.
+# NOTE: In this execution environment, the referenced attachment path was not found, so the
+# exact payload could not be loaded automatically.
 MOCK_PAYLOAD: Dict[str, Any] = {
-    "message": "Hello from the mock API",
-    "items": [
-        {"id": 1, "name": "Alpha", "status": "active"},
-        {"id": 2, "name": "Beta", "status": "inactive"},
-        {"id": 3, "name": "Gamma", "status": "active"},
-    ],
-    "meta": {"source": "fastapi_mock_api_backend", "version": "1.0.0"},
+    "error": "Attachment not available in runtime environment",
+    "detail": (
+        "The user-provided JSON payload must be pasted here verbatim (as a Python dict) "
+        "once the attachment is accessible."
+    ),
 }
 
 
