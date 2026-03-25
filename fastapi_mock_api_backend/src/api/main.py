@@ -19,10 +19,12 @@ def _parse_cors_origins(raw: Optional[str]) -> List[str]:
 
 # Configure CORS:
 # - Default for local development (common dev ports).
-# - Can be overridden with CORS_ALLOW_ORIGINS env var (comma-separated).
+# - Additionally allow Kavia cloud dev origins (vscode-internal-*.cloud.kavia.ai) so
+#   browser requests from the frontend origin (port 3000) are accepted.
+# - Can be overridden/extended with CORS_ALLOW_ORIGINS env var (comma-separated).
 #
 # NOTE: If you need to allow a different origin in your environment, request setting:
-#   CORS_ALLOW_ORIGINS="http://localhost:XXXX,http://127.0.0.1:YYYY"
+#   CORS_ALLOW_ORIGINS="http://localhost:XXXX,http://127.0.0.1:YYYY,https://example.com"
 _default_dev_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -30,6 +32,14 @@ _default_dev_origins = [
     "http://127.0.0.1:5173",
 ]
 _allow_origins = _parse_cors_origins(os.getenv("CORS_ALLOW_ORIGINS")) or _default_dev_origins
+
+# Regex to allow cloud workspace frontend origins like:
+#   https://vscode-internal-25521-beta.beta01.cloud.kavia.ai:3000
+# This ensures /mock responds with Access-Control-Allow-Origin for those origins.
+_allow_origin_regex = os.getenv(
+    "CORS_ALLOW_ORIGIN_REGEX",
+    r"^https://vscode-internal-[0-9]+-beta\.beta01\.cloud\.kavia\.ai:3000$",
+)
 
 openapi_tags = [
     {"name": "Health", "description": "Service health and readiness endpoints."},
@@ -51,6 +61,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allow_origins,
+    allow_origin_regex=_allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
