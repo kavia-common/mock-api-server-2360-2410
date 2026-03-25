@@ -44,6 +44,7 @@ _allow_origin_regex = os.getenv(
 openapi_tags = [
     {"name": "Health", "description": "Service health and readiness endpoints."},
     {"name": "Mock", "description": "Endpoints serving mock payloads for frontend consumption."},
+    {"name": "Errors", "description": "Endpoints returning fixed error messages for testing."},
 ]
 
 app = FastAPI(
@@ -117,3 +118,26 @@ def get_mock() -> dict[str, Any]:
     """
     # Return exactly the payload (no wrapper like {"payload": ...}).
     return MOCK_PAYLOAD
+
+
+# PUBLIC_INTERFACE
+@app.get(
+    "/error/date-time-missing",
+    tags=["Errors"],
+    operation_id="get_error_date_time_missing",
+    summary="Return a fixed missing date/time error message",
+    description='Returns the exact message: "Error: Date and time is missing".',
+    response_class=None,  # keep FastAPI defaults; we explicitly return a Response below
+)
+def get_error_date_time_missing():
+    """
+    Returns a fixed error message indicating that date and time is missing.
+
+    Returns:
+        starlette.responses.Response: Plain-text response with the exact content
+        "Error: Date and time is missing".
+    """
+    # Important: return the exact string as requested, with no extra whitespace/newlines.
+    from fastapi import Response  # local import to avoid affecting existing import ordering
+
+    return Response(content="Error: Date and time is missing", media_type="text/plain")
