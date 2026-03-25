@@ -1,7 +1,7 @@
 import os
 from typing import Any, List, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -127,7 +127,7 @@ def get_mock() -> dict[str, Any]:
     operation_id="get_error_date_time_missing",
     summary="Return a fixed missing date/time error message",
     description='Returns the exact message: "Error: Date and time is missing".',
-    response_class=None,  # keep FastAPI defaults; we explicitly return a Response below
+    response_class=Response,
 )
 def get_error_date_time_missing():
     """
@@ -138,6 +138,4 @@ def get_error_date_time_missing():
         "Error: Date and time is missing".
     """
     # Important: return the exact string as requested, with no extra whitespace/newlines.
-    from fastapi import Response  # local import to avoid affecting existing import ordering
-
     return Response(content="Error: Date and time is missing", media_type="text/plain")
