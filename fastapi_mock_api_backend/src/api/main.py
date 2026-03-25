@@ -1,9 +1,8 @@
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
 
 
 def _parse_cors_origins(raw: Optional[str]) -> List[str]:
@@ -42,7 +41,8 @@ app = FastAPI(
     description=(
         "A backend-only mock API built with FastAPI.\n\n"
         "- `GET /mock` returns a fixed JSON payload for frontend consumption.\n"
-        "- `GET /health` returns service status.\n"
+        "- `GET /health` returns service status.\n\n"
+        "NOTE: `/mock` returns the payload *as-is* (not wrapped) to match frontend expectations."
     ),
     version="1.0.0",
     openapi_tags=openapi_tags,
@@ -57,64 +57,46 @@ app.add_middleware(
 )
 
 
-class HealthResponse(BaseModel):
-    """Response model for the health check endpoint."""
-
-    status: str = Field(..., description="Service health status. 'ok' when healthy.")
-
-
-class MockPayloadResponse(BaseModel):
-    """Response model for the /mock endpoint."""
-
-    payload: Dict[str, Any] = Field(..., description="Mock JSON payload.")
-
-
 # PUBLIC_INTERFACE
 @app.get(
     "/health",
-    response_model=HealthResponse,
     tags=["Health"],
     operation_id="get_health",
     summary="Health check",
     description="Returns the health status of the service.",
 )
-def health() -> HealthResponse:
+def health() -> dict:
     """
     Health check endpoint.
 
     Returns:
-        HealthResponse: `{"status": "ok"}` when the service is up.
+        dict: `{"status": "ok"}` when the service is up.
     """
-    return HealthResponse(status="ok")
+    return {"status": "ok"}
 
 
-# The sample JSON payload returned by GET /mock.
-# If you need a different payload, update MOCK_PAYLOAD below.
-MOCK_PAYLOAD: Dict[str, Any] = {
-    "message": "Hello from the mock API",
-    "items": [
-        {"id": 1, "name": "Alpha", "status": "active"},
-        {"id": 2, "name": "Beta", "status": "inactive"},
-        {"id": 3, "name": "Gamma", "status": "active"},
-    ],
-    "meta": {"source": "fastapi_mock_api_backend", "version": "1.0.0"},
-}
+# Import the payload from a dedicated module so it can be updated independently.
+from src.api.mock_payload import MOCK_PAYLOAD  # noqa: E402  (import after app setup is ok here)
 
 
 # PUBLIC_INTERFACE
 @app.get(
     "/mock",
-    response_model=MockPayloadResponse,
     tags=["Mock"],
     operation_id="get_mock_payload",
     summary="Get mock JSON payload",
-    description="Returns a fixed JSON payload intended for frontend development/testing.",
+    description=(
+        "Returns the mock JSON payload intended for frontend development/testing.\n\n"
+        "The response body is the payload itself (no extra wrapper fields)."
+    ),
+    response_model=dict[str, Any],
 )
-def get_mock() -> MockPayloadResponse:
+def get_mock() -> dict[str, Any]:
     """
     Mock payload endpoint.
 
     Returns:
-        MockPayloadResponse: An object with a `payload` field containing the mock JSON.
+        dict[str, Any]: The mock JSON payload as the *top-level* response object.
     """
-    return MockPayloadResponse(payload=MOCK_PAYLOAD)
+    # Return exactly the payload (no wrapper like {"payload": ...}).
+    return MOCK_PAYLOAD
