@@ -97,6 +97,12 @@ def get_mock() -> dict[str, Any]:
 
     Returns:
         dict[str, Any]: The mock JSON payload as the *top-level* response object.
+
+    Notes:
+        The payload includes top-level metadata fields:
+        - request_id
+        - version
+        - generated_at
     """
     # Return exactly the payload (no wrapper like {"payload": ...}).
     return MOCK_PAYLOAD
